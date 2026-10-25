@@ -94,9 +94,7 @@ Sources/
   HiDPI/  WindowSwitcher/  SpaceProfiles/  InputMemory/  MouseScroll/  KeyboardLock/
 Resources/Toolset/  Info.plist and the app icon
 Icon/               the script that draws the app icon
-docs/               one file for each step of the work
+docs/images/        screenshots for this README
 ```
 Each feature is one library target that conforms to `ToolsetFeature`. A new feature is one new target and one line in the feature list of `AppDelegate`.
 
-## Documentation
-The [`docs/`](docs/) folder has one file for each step: the design ([01_toolset_architecture.md](docs/01_toolset_architecture.md)), each feature, and the test results.
