@@ -72,11 +72,11 @@ final class Switcher {
         loadFavicons()
     }
 
-    /// For Edge, replaces the app icons with the website icons when the background lookup ends.
+    /// For a browser, replaces the app icons with the website icons when the background lookup ends.
     private func loadFavicons() {
-        guard let app, WindowIcons.isEdge(app) else { return }
+        guard let app, WindowIcons.hasFavicons(app) else { return }
         let list = windows
-        icons.loadFavicons(for: list) { [weak self] favicons in
+        icons.loadFavicons(for: list, of: app) { [weak self] favicons in
             // The list can change while the lookup runs. Then the next lookup updates the icons.
             guard let self, self.app == app, self.windows.count == list.count,
                   zip(self.windows, list).allSatisfy({ self.isSame($0, $1) }) else { return }

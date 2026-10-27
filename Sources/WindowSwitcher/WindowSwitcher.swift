@@ -52,8 +52,8 @@ public final class WindowSwitcher: NSObject, ObservableObject, ToolsetFeature {
         if Self.isAltTabRunning {
             items.append(disabledItem("AltTab also uses Option-Tab. Quit AltTab."))
         }
-        if WindowIcons.needsEdgeDataAccess {
-            let item = NSMenuItem(title: "Allow Website Icons for Edge…", action: #selector(openFullDiskAccessSettings), keyEquivalent: "")
+        if FaviconSources.needsDataAccess {
+            let item = NSMenuItem(title: "Allow Website Icons for Browsers…", action: #selector(openFullDiskAccessSettings), keyEquivalent: "")
             item.target = self
             items.append(item)
         }
