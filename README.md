@@ -12,7 +12,7 @@ A feature that is off is never started, so it costs no CPU, no observers, and no
 | [Window Switcher](#window-switcher) | ⌥ Tab switches between the windows of the frontmost app, on all Spaces | OptionTab |
 | [Space Profiles](#space-profiles) | Restores your desktops and windows when you connect or disconnect a display | Dispace |
 | [Input Memory](#input-memory) | Keeps the input source (for example ABC or Vietnamese Telex) of each window | Input Source Pro |
-| [Mouse Scrolling](#mouse-scrolling) | Smooth scrolling and an inverted direction for a mouse wheel | Mac Mouse Fix (two settings) |
+| [Mouse](#mouse) | Smooth scrolling and an inverted direction for a mouse wheel, and trackpad actions for held mouse buttons | Mac Mouse Fix |
 | [Keyboard Lock](#keyboard-lock) | Hold ⌘⇧L to lock the keyboard while you clean it | KeyboardCleanTool |
 
 Fan control (Macs Fan Control) is not in Toolset. It needs a root helper to write the SMC, so it stays a separate app.
@@ -47,10 +47,14 @@ Each window keeps its own input source. Rules can set the start source for the n
 
 <img src="docs/images/screenshots/settings_input_memory.png" width="700" alt="Input Memory settings">
 
-### Mouse Scrolling
+### Mouse
 A mouse wheel glides instead of jumps, and its direction can be the opposite of the trackpad. The trackpad and the Magic Mouse do not change. The scroll speed in System Settings still applies.
 
-<img src="docs/images/screenshots/settings_mouse_scrolling.png" width="700" alt="Mouse Scrolling settings">
+<img src="docs/images/screenshots/settings_mouse.png" width="700" alt="Mouse settings: scrolling">
+
+Hold the middle, back, or forward button for 0.3 s to start a trackpad action: Mission Control, App Exposé, Show Desktop, Apps, Previous Space, Next Space, or Look Up (the word under the pointer). A short click and a drag still work as before. A button with an action sends its click when you release it.
+
+<img src="docs/images/screenshots/settings_mouse_buttons.png" width="700" alt="Mouse settings: held buttons">
 
 ### Keyboard Lock
 Hold ⌘⇧L for 3 seconds. A ring shows the progress, and a release before 3 seconds cancels the lock.
@@ -84,14 +88,14 @@ This builds `Toolset.app`, copies it to `/Applications`, and opens it. Then turn
 - `./build.sh --run` builds and opens the copy in `build/`.
 
 ## Private APIs
-Some features use private macOS functions: SkyLight for Spaces and windows (Space Profiles, Window Switcher) and CoreGraphics display modes (HiDPI). A macOS update can remove them. Toolset checks each function at launch and turns off only the part that needs it.
+Some features use private macOS functions: SkyLight for Spaces and windows (Space Profiles, Window Switcher), CoreGraphics display modes (HiDPI), and the Dock notifications that open Mission Control, App Exposé, Show Desktop, and Apps (Mouse). A macOS update can remove them. Toolset checks each function before it uses it, and stops only the part that needs it.
 
 ## Project layout
 ```
 Sources/
   ToolsetCore/      shared services: Accessibility helpers, focus tracker, display watcher, login item
   ToolsetApp/       the menu bar app, the Settings window, the feature registry
-  HiDPI/  WindowSwitcher/  SpaceProfiles/  InputMemory/  MouseScroll/  KeyboardLock/
+  HiDPI/  WindowSwitcher/  SpaceProfiles/  InputMemory/  Mouse/  KeyboardLock/
 Resources/Toolset/  Info.plist and the app icon
 Icon/               the script that draws the app icon
 docs/images/        screenshots for this README

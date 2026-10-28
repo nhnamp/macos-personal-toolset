@@ -2,12 +2,13 @@ import AppKit
 import SwiftUI
 import ToolsetCore
 
-/// Smooth scrolling and an inverted scroll direction for a mouse wheel. The trackpad does not change.
-/// This feature replaces two settings of the separate app Mac Mouse Fix.
-public final class MouseScroll: ObservableObject, ToolsetFeature {
+/// Smooth scrolling and an inverted scroll direction for a mouse wheel, and an action for each held extra button.
+/// The trackpad does not change. This feature replaces the separate app Mac Mouse Fix.
+public final class Mouse: ObservableObject, ToolsetFeature {
+    /// The id and the scroll setting keys are from the first name, "Mouse Scrolling". They stay, so the saved settings stay.
     public let id = "mouse-scroll"
-    public let title = "Mouse Scrolling"
-    public let summary = "Smooth scrolling and an inverted direction for a mouse wheel."
+    public let title = "Mouse"
+    public let summary = "Smooth scrolling, an inverted direction, and actions for held buttons."
     public let needsAccessibility = true
 
     static let macMouseFixBundleIds = ["com.nuebling.mac-mouse-fix", "com.nuebling.mac-mouse-fix.helper"]
@@ -18,13 +19,29 @@ public final class MouseScroll: ObservableObject, ToolsetFeature {
     @Published public var invert: Bool {
         didSet { UserDefaults.standard.set(invert, forKey: "MouseScroll.invert"); apply() }
     }
+    /// The action for a hold of each extra button.
+    @Published public private(set) var holdActions: [MouseButton: ButtonAction]
 
-    private let tap = ScrollTap()
+    private let tap = MouseTap()
     private var isRunning = false
 
     public init() {
         smooth = UserDefaults.standard.object(forKey: "MouseScroll.smooth") as? Bool ?? true
         invert = UserDefaults.standard.object(forKey: "MouseScroll.invert") as? Bool ?? true
+        holdActions = Dictionary(uniqueKeysWithValues: MouseButton.allCases.map { button in
+            let saved = UserDefaults.standard.string(forKey: Self.holdKey(button)).flatMap(ButtonAction.init(rawValue:))
+            return (button, saved ?? button.defaultHoldAction)
+        })
+    }
+
+    public func setHoldAction(_ action: ButtonAction, for button: MouseButton) {
+        holdActions[button] = action
+        UserDefaults.standard.set(action.rawValue, forKey: Self.holdKey(button))
+        apply()
+    }
+
+    private static func holdKey(_ button: MouseButton) -> String {
+        "Mouse.hold.\(button)"
     }
 
     public func start() {
@@ -39,10 +56,12 @@ public final class MouseScroll: ObservableObject, ToolsetFeature {
 
     /// The tap exists only while the feature is on and at least one option is on.
     private func apply() {
-        let options = ScrollTap.Options(smooth: smooth, invert: invert)
+        let actions = holdActions.filter { $0.value != .none }
+        let options = MouseTap.Options(smooth: smooth, invert: invert,
+                                       holdActions: Dictionary(uniqueKeysWithValues: actions.map { ($0.key.rawValue, $0.value) }))
         tap.options = options
-        if isRunning, options.smooth || options.invert {
-            if !tap.start() { NSLog("Mouse Scrolling: the event tap did not start") }
+        if isRunning, options.needsTap {
+            if !tap.start() { NSLog("Mouse: the event tap did not start") }
         } else {
             tap.stop()
         }
@@ -64,7 +83,7 @@ public final class MouseScroll: ObservableObject, ToolsetFeature {
     }
 
     public func makeSettingsSections() -> AnyView {
-        AnyView(MouseScrollSettingsView(mouse: self))
+        AnyView(MouseSettingsView(mouse: self))
     }
 
     @objc private func toggleSmooth() { smooth.toggle() }

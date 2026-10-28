@@ -3,7 +3,7 @@ import ApplicationServices
 import HiDPI
 import InputMemory
 import KeyboardLock
-import MouseScroll
+import Mouse
 import SpaceProfiles
 import SwiftUI
 import ToolsetCore
@@ -19,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         WindowSwitcher(focus: focus),
         SpaceProfiles(watcher: displays),
         InputMemory(focus: focus),
-        MouseScroll(),
+        Mouse(),
         KeyboardLock(),
     ])
     private var statusItem: NSStatusItem?

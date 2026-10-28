@@ -12,9 +12,9 @@ let package = Package(
         .target(name: "HiDPI", dependencies: ["ToolsetCore"], path: "Sources/HiDPI"),
         .target(name: "WindowSwitcher", dependencies: ["ToolsetCore"], path: "Sources/WindowSwitcher"),
         .target(name: "SpaceProfiles", dependencies: ["ToolsetCore"], path: "Sources/SpaceProfiles"),
-        .target(name: "MouseScroll", dependencies: ["ToolsetCore"], path: "Sources/MouseScroll"),
+        .target(name: "Mouse", dependencies: ["ToolsetCore"], path: "Sources/Mouse"),
         .target(name: "KeyboardLock", dependencies: ["ToolsetCore"], path: "Sources/KeyboardLock"),
-        .executableTarget(name: "ToolsetApp", dependencies: ["ToolsetCore", "InputMemory", "HiDPI", "WindowSwitcher", "SpaceProfiles", "MouseScroll", "KeyboardLock"], path: "Sources/ToolsetApp"),
+        .executableTarget(name: "ToolsetApp", dependencies: ["ToolsetCore", "InputMemory", "HiDPI", "WindowSwitcher", "SpaceProfiles", "Mouse", "KeyboardLock"], path: "Sources/ToolsetApp"),
     ],
     swiftLanguageModes: [.v5]
 )
