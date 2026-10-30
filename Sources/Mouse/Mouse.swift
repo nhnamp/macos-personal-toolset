@@ -19,6 +19,9 @@ public final class Mouse: ObservableObject, ToolsetFeature {
     @Published public var invert: Bool {
         didSet { UserDefaults.standard.set(invert, forKey: "MouseScroll.invert"); apply() }
     }
+    @Published public var smoothness: Smoothness {
+        didSet { UserDefaults.standard.set(smoothness.rawValue, forKey: "Mouse.smoothness"); apply() }
+    }
     /// The action for a hold of each extra button.
     @Published public private(set) var holdActions: [MouseButton: ButtonAction]
 
@@ -28,6 +31,7 @@ public final class Mouse: ObservableObject, ToolsetFeature {
     public init() {
         smooth = UserDefaults.standard.object(forKey: "MouseScroll.smooth") as? Bool ?? true
         invert = UserDefaults.standard.object(forKey: "MouseScroll.invert") as? Bool ?? true
+        smoothness = UserDefaults.standard.string(forKey: "Mouse.smoothness").flatMap(Smoothness.init(rawValue:)) ?? .medium
         holdActions = Dictionary(uniqueKeysWithValues: MouseButton.allCases.map { button in
             let saved = UserDefaults.standard.string(forKey: Self.holdKey(button)).flatMap(ButtonAction.init(rawValue:))
             return (button, saved ?? button.defaultHoldAction)
@@ -58,7 +62,8 @@ public final class Mouse: ObservableObject, ToolsetFeature {
     private func apply() {
         let actions = holdActions.filter { $0.value != .none }
         let options = MouseTap.Options(smooth: smooth, invert: invert,
-                                       holdActions: Dictionary(uniqueKeysWithValues: actions.map { ($0.key.rawValue, $0.value) }))
+                                       holdActions: Dictionary(uniqueKeysWithValues: actions.map { ($0.key.rawValue, $0.value) }),
+                                       glideTime: smoothness.glideTime)
         tap.options = options
         if isRunning, options.needsTap {
             if !tap.start() { NSLog("Mouse: the event tap did not start") }
@@ -94,5 +99,29 @@ public final class Mouse: ObservableObject, ToolsetFeature {
         item.target = self
         item.state = isOn ? .on : .off
         return item
+    }
+}
+
+/// How long the content glides after a wheel step.
+public enum Smoothness: String, CaseIterable, Identifiable {
+    case short, medium, long
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .short: "Short"
+        case .medium: "Medium"
+        case .long: "Long"
+        }
+    }
+
+    /// The time constant of the glide. The glide of one step ends after about 3 to 4 time constants.
+    var glideTime: Double {
+        switch self {
+        case .short: 0.06
+        case .medium: 0.1
+        case .long: 0.15
+        }
     }
 }

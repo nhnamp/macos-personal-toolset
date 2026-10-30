@@ -48,7 +48,7 @@ Each window keeps its own input source. Rules can set the start source for the n
 <img src="docs/images/screenshots/settings_input_memory.png" width="700" alt="Input Memory settings">
 
 ### Mouse
-A mouse wheel glides instead of jumps, and its direction can be the opposite of the trackpad. The trackpad and the Magic Mouse do not change. The scroll speed in System Settings still applies.
+A mouse wheel glides instead of jumps, and its direction can be the opposite of the trackpad. The glide moves the content one step on each refresh of the display, and its length is Short, Medium, or Long. The trackpad and the Magic Mouse do not change. The scroll speed in System Settings still applies.
 
 <img src="docs/images/screenshots/settings_mouse.png" width="700" alt="Mouse settings: scrolling">
 

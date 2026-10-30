@@ -9,6 +9,11 @@ struct MouseSettingsView: View {
         Group {
             Section("Mouse Wheel") {
                 Toggle("Smooth scrolling", isOn: $mouse.smooth)
+                Picker("Glide", selection: $mouse.smoothness) {
+                    ForEach(Smoothness.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .disabled(!mouse.smooth)
                 Toggle("Invert direction", isOn: $mouse.invert)
                 note("These settings change only a mouse with a scroll wheel. The trackpad and the Magic Mouse do not change.")
                 note("To change the speed, use System Settings > Mouse > Scrolling speed. Smooth scrolling glides only vertically, and only without modifier keys.")
