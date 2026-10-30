@@ -9,6 +9,9 @@ import CoreVideo
 ///   1 pixel on each frame of a 120 Hz display.
 /// - The display link runs only during a glide. Its frames come at the refresh times of the display, so each frame
 ///   on the screen gets one step.
+/// - A display link can stop without a call from Toolset. Then no frame comes, and the glide stays active.
+///   So `add` checks the time of the last frame. After `stallTime` without a frame, it drops the glide,
+///   makes a new display link, and returns false. The caller then sends the wheel event unchanged.
 ///
 /// `add` and `cancel` run on the tap thread. The frames run on the display link thread. A lock protects the state.
 final class Glide {
@@ -21,11 +24,15 @@ final class Glide {
 
     /// Pixels per second.
     static let minimumSpeed = 120.0
+    /// Seconds without a frame, during a glide, after which the display link counts as stopped.
+    static let stallTime = 0.2
 
     private let lock = NSLock()
     private var remaining = 0.0
     private var subPixel = 0.0
     private var lastFrame: Double?
+    /// The time (`systemUptime`) of the start of the glide or of its last frame.
+    private var lastProgress = 0.0
     private var hasBegun = false
     private var isActive = false
     private var currentTimeConstant = 0.1
@@ -46,15 +53,31 @@ final class Glide {
         set { lock.withLock { currentTimeConstant = newValue } }
     }
 
-    func add(_ distance: Double) {
-        let needsStart: Bool = lock.withLock {
+    /// Returns false when the display link gives no frames. Then the glide does not take the distance.
+    func add(_ distance: Double) -> Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        var stalledAfterBegin = false
+        let result: (needsStart: Bool, stalled: Bool) = lock.withLock {
+            if isActive && now - lastProgress > Self.stallTime {
+                // Drop the distance of the glide. A late start would make a large jump.
+                stalledAfterBegin = hasBegun
+                reset()
+                return (false, true)
+            }
             // A step in the other direction stops the current glide at once.
             if remaining * distance < 0 { remaining = 0 }
             remaining += distance
+            if !isActive { lastProgress = now }
             defer { isActive = true }
-            return !isActive
+            return (!isActive, false)
         }
-        if needsStart { control.async { self.startLink() } }
+        if result.stalled {
+            if stalledAfterBegin { post(0, .ended) }
+            control.async { self.discardLink() }
+            return false
+        }
+        if result.needsStart { control.async { self.startLink() } }
+        return true
     }
 
     /// Stops the glide now, for example when the tap stops.
@@ -72,6 +95,7 @@ final class Glide {
         var events: [(Int32, Phase)] = []
         let finished: Bool = lock.withLock {
             guard isActive else { return true }
+            lastProgress = ProcessInfo.processInfo.systemUptime
             let elapsed = lastFrame.map { min(max(time - $0, 0.001), 0.05) } ?? refreshPeriod
             lastFrame = time
             var step = remaining * (1 - exp(-elapsed / currentTimeConstant))
@@ -120,7 +144,14 @@ final class Glide {
         }
         guard let link, !CVDisplayLinkIsRunning(link) else { return }
         CVDisplayLinkSetCurrentCGDisplay(link, Self.displayUnderPointer())
-        CVDisplayLinkStart(link)
+        // If the start fails, no frame comes, and the next `add` finds the stall.
+        if CVDisplayLinkStart(link) != kCVReturnSuccess { discardLink() }
+    }
+
+    /// The next start makes a new display link.
+    private func discardLink() {
+        if let link { CVDisplayLinkStop(link) }
+        link = nil
     }
 
     private func stopLinkIfIdle() {

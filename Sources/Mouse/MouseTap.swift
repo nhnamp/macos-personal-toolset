@@ -137,8 +137,8 @@ final class MouseTap {
            event.flags.intersection(modifiers).isEmpty {
             // macOS increases the line count when the wheel turns fast. The scroll speed in System Settings changes this increase.
             glide.timeConstant = options.glideTime
-            glide.add(Double(options.invert ? -lines : lines) * Self.pixelsPerLine)
-            return nil
+            if glide.add(Double(options.invert ? -lines : lines) * Self.pixelsPerLine) { return nil }
+            // The glide gets no display frames. Send this step as a normal wheel event, so the wheel still scrolls.
         }
         if options.invert { Self.invert(event) }
         return event
